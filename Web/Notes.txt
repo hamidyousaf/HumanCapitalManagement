@@ -1,0 +1,11 @@
+When creating new application, following points must be noted.
+	1)- AppConst
+	
+------------------
+30-Sep-2023
+	1)- Clean up Repository class.
+	2)- Implement Result<> responce in all API.
+
+	Pending Tasks.
+	1)- Authentication work.
+	2)- Add validation in command.
