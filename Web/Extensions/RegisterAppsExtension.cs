@@ -22,11 +22,14 @@ internal static class RegisterAppsExtension
         }
 
         app.UseHttpsRedirection();
-        app.UseAuthorization();
 
-        #region Using middleware for handling global exception.
+        #region Registered middlewares
         app.UseMiddleware<ExceptionHandlingMiddleware>();
+        app.UseMiddleware<HtmlSanitizationMiddleware>();
+        app.UseMiddleware<JwtRefreshMiddleware>();
         #endregion
+
+        app.UseAuthorization();
 
         #region Using rate limiter.
         app.UseRateLimiter();

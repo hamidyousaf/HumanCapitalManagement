@@ -12,5 +12,6 @@ namespace Domain.Common
         public DateTime? UpdatedDate { get; set; }
         public string? DeletedBy { get; set; }
         public DateTime? DeletedDate { get; set; }
+        public byte[] RowVersion { get; set; } // this is for Rowversions.
     }
 }

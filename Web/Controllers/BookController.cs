@@ -11,7 +11,7 @@ namespace Web.Controllers
     {
         public BookController(IMediator mediator) : base(mediator){}
 
-        [AllowAnonymous]
+        [Authorize]
         [HttpGet("GetAllBooks")]
         public async Task<IActionResult> GetAllBooks()
         {

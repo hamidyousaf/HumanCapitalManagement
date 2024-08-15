@@ -128,7 +128,7 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity>
     private void SetUpdateAnalysisValue(TEntity entity, bool isSoftDelete)
     {
         var entityProperties = entity.GetType().GetProperties();
-        var property = entityProperties.FirstOrDefault(x => x.Name.ToLower() == "modifieddate");
+        var property = entityProperties.FirstOrDefault(x => x.Name.ToLower() == "updateddate");
         if (property != null)
             property.SetValue(entity, DateTime.UtcNow);
 

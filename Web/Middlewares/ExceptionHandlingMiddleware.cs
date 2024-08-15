@@ -1,4 +1,5 @@
 ﻿using Domain.DTOs.Responces;
+using Serilog;
 using System.Net;
 using System.Text.Json;
 
@@ -8,7 +9,7 @@ internal sealed class ExceptionHandlingMiddleware : IMiddleware
 {
     private readonly IHostEnvironment _env;
     public ILogger<ExceptionHandlingMiddleware> _logger { get; }
-    private ExceptionHandlingMiddleware() { }
+    private ExceptionHandlingMiddleware() { } // This is use to prevent from creating object
     public ExceptionHandlingMiddleware(IHostEnvironment env, ILogger<ExceptionHandlingMiddleware> logger)
     {
         _env = env;
@@ -28,7 +29,7 @@ internal sealed class ExceptionHandlingMiddleware : IMiddleware
     }
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
-        _logger.LogError(exception, exception.Message);
+        Log.Error(exception, exception.Message);
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 

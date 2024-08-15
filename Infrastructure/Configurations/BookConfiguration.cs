@@ -38,8 +38,32 @@ namespace Infrastructure.Configurations
                 .Property(x => x.UpdatedDate)
                 .IsRequired(false);
             #endregion
+
+            #region Temporal Table
+            builder
+                .ToTable(x => x.IsTemporal(
+                    t =>
+                    {
+                        t.UseHistoryTable("BooksHistory");
+                        t.HasPeriodStart("PeriodStart");
+                        t.HasPeriodEnd("PeriodEnd");
+                    }));
+            #endregion
+
             #region Global query filter
             builder.HasQueryFilter(x => !x.IsDeleted && x.IsActive);
+            #endregion
+
+            #region Rowversions
+            builder
+                .Property(p => p.RowVersion)
+                .IsRowVersion();
+            #endregion
+
+            #region Constraints
+            builder
+                .HasIndex(b => b.Title)
+                .IsUnique();
             #endregion
         }
     }

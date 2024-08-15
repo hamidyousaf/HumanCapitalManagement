@@ -12,6 +12,7 @@ using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using Application.DTOs.Responces;
+using Application.Abstractions.Services;
 
 namespace Application.CQRS.Auth;
 
@@ -75,14 +76,17 @@ public sealed class RegisterCommandHandlers : IRequestHandler<RegisterCommand, R
 public sealed class LoginCommandHandlers : IRequestHandler<LoginCommand, Result<LoginResponse>>
 {
     private readonly UserManager<User> _userManger;
+    private readonly ITokenService _tokenService;
     private IConfiguration _configuration;
 
     public LoginCommandHandlers(
         UserManager<User> userManger,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ITokenService tokenService)
     {
         _userManger = userManger;
         _configuration = configuration;
+        _tokenService = tokenService;
     }
 
     public async Task<Result<LoginResponse>> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -118,25 +122,11 @@ public sealed class LoginCommandHandlers : IRequestHandler<LoginCommand, Result<
         }
 
         // add claims in jwt token.
-        var claims = new[] {
-                new Claim("Email", request.Login.Email),
-                new Claim(ClaimTypes.NameIdentifier, user.Id)
-            };
-
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["AuthSettings:Key"]));
-        var token = new JwtSecurityToken(
-            issuer: _configuration["AuthSettings:Issuer"],
-            audience: _configuration["AuthSettings:Audience"],
-            claims: claims,
-            expires: DateTime.Now.AddDays(30),
-            signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
-
-        string tokenAsString = new JwtSecurityTokenHandler().WriteToken(token);
+        string token = _tokenService.GenerateToken(user);
 
         LoginResponse response = new LoginResponse()
         {
-            ExpireDate = token.ValidTo,
-            Token = tokenAsString
+            Token = token
         };
 
         // return response.

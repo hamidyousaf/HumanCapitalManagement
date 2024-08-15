@@ -1,5 +1,8 @@
 ﻿using Infrastructure;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.OpenApi.Models;
+using Serilog;
+using Serilog.Sinks.MSSqlServer;
 using Web.Middlewares;
 
 namespace Web.Extensions;
@@ -7,6 +10,17 @@ internal static class RegisterServicesExtension
 {
     public static IServiceCollection Register(this IServiceCollection services, ConfigurationManager _configuration)
     {
+        #region For serilog.
+        var connectionString = _configuration.GetConnectionString("DBConnection");
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .WriteTo
+            .MSSqlServer(
+                connectionString: connectionString,
+                sinkOptions: new MSSqlServerSinkOptions { TableName = "LogEvents", AutoCreateSqlTable = true })
+            .CreateLogger();
+        #endregion
+
         // Add services to the container.
         var configuration = _configuration
             .SetBasePath(Directory.GetCurrentDirectory())
@@ -25,10 +39,37 @@ internal static class RegisterServicesExtension
 
         services.AddControllers();
         services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
+
+        #region For Swagger
+        services
+              .AddSwaggerGen(c =>
+              {
+                  c.AddSecurityDefinition("Bearer", //Name the security scheme
+                  new OpenApiSecurityScheme
+                  {
+                      Description = "JWT Authorization header using the Bearer scheme.",
+                      Type = SecuritySchemeType.Http, //We set the scheme type to http since we're using bearer authentication
+                      Scheme = "bearer" //The name of the HTTP Authorization scheme to be used in the Authorization header. In this case "bearer".
+                  });
+
+                  c.AddSecurityRequirement(new OpenApiSecurityRequirement{
+                 {
+                        new OpenApiSecurityScheme{
+                            Reference = new OpenApiReference{
+                                Id = "Bearer", //The name of the previously defined security scheme.
+                                Type = ReferenceType.SecurityScheme
+                            }
+                        },new List<string>()
+                    }
+                });
+                  c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
+              });
+        #endregion 
 
         #region For Middlewares
         services.AddTransient<ExceptionHandlingMiddleware>();
+        services.AddTransient<HtmlSanitizationMiddleware>();
+        services.AddTransient<JwtRefreshMiddleware>();
         #endregion
 
         #region For Rate Limiting
